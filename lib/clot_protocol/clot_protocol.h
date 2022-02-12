@@ -98,11 +98,11 @@ uint16_t clot_crc16 (uint8_t * pcBlock, uint16_t len);
 
 
 // | MASTER_START_BYTE | SLAVE_ADDR | UNIT_ADDR | COMMAND | CRC16_LOW | CRC16_HIGH |
-class MasterMeassage
+class master_message
 {
     // class that simply keep all needed fields for master message and constructor
     public:
-    MasterMeassage(
+    master_message(
         // we have to fill all values in every construction of message
         // because there is no any default behavior
         // except start_byte - its always 0xCA
@@ -124,11 +124,11 @@ class MasterMeassage
 //    package from slave to master - 10 bytes
 //    | SLAVE_START_BYTE | SLAVE_ADDR | UNIT_ADDR | STATUS | RESULT1 | RESULT2 | RESULT3 | RESULT4 |
 //     CRC16_LOW | CRC16_HIGH |
-class SlaveMessage
+class slave_message
 {
     // class that simply keeps all needed fields for slave message and constructor
     public:
-    SlaveMessage(
+    slave_message(
         // we have to fill all values in every construction of message
         // because there is no any default behavior
         // except start_byte - its always 0xAC for slave device
