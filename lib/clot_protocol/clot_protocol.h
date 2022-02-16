@@ -154,6 +154,7 @@ class slave_message
     uint8_t RESULT4;
     uint8_t CRC_16_1;
     uint8_t CRC_16_2;
+    void update_crc();
 
 };
 

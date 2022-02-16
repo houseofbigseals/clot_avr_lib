@@ -2,6 +2,17 @@
 
 #include "slave.h"
 
+
+clot_slave::clot_slave(base_unit **units_pointer_, uint16_t units_number_, 
+HardwareSerial * s_, bool debug = false)
+{
+    this->_units_pointer = units_pointer_;
+    this->_units_number = units_number_;
+    this->_s= s_;
+
+}
+
+
 void clot_slave::do_main_loop()
 {
     // that function must be used as fast as we can
@@ -36,6 +47,45 @@ void clot_slave::do_main_loop()
 
 }
 
+
+void clot_slave::send_slave_message(slave_message sm_)
+{
+    //    package from slave to master - 10 bytes
+    //    | SLAVE_START_BYTE | SLAVE_ADDR | UNIT_ADDR | STATUS | RESULT1 | 
+    //      RESULT2 | RESULT3 | RESULT4 | CRC16_1 | CRC16_2 |
+    // disgusting
+    // go to send mode
+    //digitalWrite(software_serial_pin, RS485Transmit);
+    // then send bytes
+    _s->write(sm_.START_BYTE);
+    delayMicroseconds(5);
+    _s->write(sm_.SLAVE_ADDR);
+    delayMicroseconds(5);
+    _s->write(sm_.UNIT_ADDR);
+    delayMicroseconds(5);
+    _s->write(sm_.STATUS);
+    delayMicroseconds(5);
+    _s->write(sm_.RESULT1);
+    delayMicroseconds(5);
+    _s->write(sm_.RESULT2);
+    delayMicroseconds(5);
+    _s->write(sm_.RESULT3);
+    delayMicroseconds(5);
+    _s->write(sm_.RESULT4);
+    delayMicroseconds(5);
+    _s->write(sm_.CRC_16_1);
+    delayMicroseconds(5);
+    _s->write(sm_.CRC_16_2);
+    delayMicroseconds(5);
+
+    // go back to read mode
+    //digitalWrite(software_serial_pin, RS485Receive);
+    // clean
+    _s->flush();
+
+}
+
+
 void clot_slave::parse_package(uint8_t * package, uint16_t len)
 {
     // at first lets check if it for us
@@ -48,58 +98,83 @@ void clot_slave::parse_package(uint8_t * package, uint16_t len)
     else
     {
 
-    if(len != clot_master_message_len)
-    {
-        // its incorrect but for us
-        slave_message error_message = create_error_message(clot_incorrect_command);
-        send_slave_message(error_message);
-        return;
-    }
-    
-    else
-    {
-        // then check start byte
-        if(package[0] != clot_master_start_byte)
+        if(len != clot_master_message_len)
         {
-            // its incorrect
-            slave_message error_message = create_error_message(clot_incorrect_command);
+            // its incorrect but for us
+            slave_message error_message = create_error_message(clot_incorrect_command,
+            package[2]);
             send_slave_message(error_message);
             return;
         }
+    
         else
         {
-            // check crc sum 
-            // just put pointer of array and len -2 to clot_crc16 function
-            uint16_t crc16_check = clot_crc16(package, len-2);
-            // split it to half
-            uint8_t crc1 = (uint8_t)((crc16_check & 0xFF00) >> 8);
-            uint8_t crc2 = (uint8_t)(crc16_check & 0x00FF);
-            if (crc1 != package[len-2] || crc2 != package[len-1])
+            // then check start byte
+            if(package[0] != clot_master_start_byte)
             {
                 // its incorrect
-                slave_message error_message = create_error_message(clot_incorrect_command);
+                slave_message error_message = create_error_message(clot_incorrect_command,
+                package[2]);
                 send_slave_message(error_message);
                 return;
             }
             else
             {
-                // check if it is for one of our devices
-                for (uint16_t d = 0; d < _units_number; d++)
+                // check crc sum 
+                // just put pointer of array and len -2 to clot_crc16 function
+                uint16_t crc16_check = clot_crc16(package, len-2);
+                // split it to half
+                uint8_t crc1 = (uint8_t)((crc16_check & 0xFF00) >> 8);
+                uint8_t crc2 = (uint8_t)(crc16_check & 0x00FF);
+                if (crc1 != package[len-2] || crc2 != package[len-1])
                 {
-                    // go through all devices and compare to their _uid
-                    uint8_t did = _units_pointer[d]->unit_id;
-                    // unite uid from message to uint16 for simplicity
-                    if (did == package[2])
+                    // its incorrect
+                    slave_message error_message = create_error_message(
+                        clot_incorrect_command, package[2]);
+                    send_slave_message(error_message);
+                    return;
+                }
+                else
+                {
+                    // check if it is for one of our devices
+                    for (uint16_t d = 0; d < _units_number; d++)
                     {
-                        uint8_t command = package[3];
-                        slave_message sm = _units_pointer[d]->handle_commands(command);
-                        // then we have to send it back to master pc
-                        send_slave_message(sm);
+                        // go through all devices and compare to their _uid
+                        uint8_t did = _units_pointer[d]->unit_id;
+                        // unite uid from message to uint16 for simplicity
+                        if (did == package[2])
+                        {
+                            uint8_t command = package[3];
+                            slave_message sm = _units_pointer[d]->handle_commands(command);
+                            // now we have to add slave addr to this msg
+                            sm.SLAVE_ADDR = this->slave_address;
+                            // and then recalculate crc sum
+                            sm.update_crc();
+                            // then we have to send it back to master pc
+                            send_slave_message(sm);
+                        }
                     }
                 }
-            }
-        }   
+            }   
+        }
     }
 }
+
+
+slave_message clot_slave::create_error_message(uint8_t error_code, uint8_t unit_id_)
+{
+            return slave_message(
+                this->slave_address,
+                unit_id_,
+                error_code,
+                0x00,
+                0x00,
+                0x00,
+                0x00);
+}
+
+
+
+
 
 

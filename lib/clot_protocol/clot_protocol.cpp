@@ -162,7 +162,7 @@ slave_message::slave_message(
     // its time to shoot in own leg
     START_BYTE = clot_slave_start_byte;
     SLAVE_ADDR = SLAVE_ADDR_;
-    UNIT_ADDR = UNIT_ADDR_;;
+    UNIT_ADDR = UNIT_ADDR_;
     STATUS = STATUS_;
     RESULT1 = RESULT1_;
     RESULT2 = RESULT2_;
@@ -182,6 +182,23 @@ slave_message::slave_message(
         RESULT3,
         RESULT4
     };
+    uint16_t crc16 = clot_crc16(array_to_calculate, clot_slave_message_len - 2);
+    CRC_16_1 = (uint8_t)((crc16 & 0xFF00) >> 8);
+    CRC_16_2 = (uint8_t)(crc16 & 0x00FF);
+}
+
+void slave_message::update_crc()
+{
+     uint8_t array_to_calculate [clot_slave_message_len - 2] = {
+        START_BYTE,
+        SLAVE_ADDR,
+        UNIT_ADDR,
+        STATUS,
+        RESULT1,
+        RESULT2,
+        RESULT3,
+        RESULT4
+     };
     uint16_t crc16 = clot_crc16(array_to_calculate, clot_slave_message_len - 2);
     CRC_16_1 = (uint8_t)((crc16 & 0xFF00) >> 8);
     CRC_16_2 = (uint8_t)(crc16 & 0x00FF);

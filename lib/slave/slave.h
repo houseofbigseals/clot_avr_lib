@@ -25,18 +25,20 @@ class clot_slave
     public:
     void parse_package(uint8_t * package, uint16_t len);
     //void send_master_message(master_message mm);
-    void send_slave_message(slave_message sm);
+    void send_slave_message(slave_message sm_);
     slave_message parse_master_message(master_message mm);
-    slave_message create_error_message(uint8_t error_code);
+    slave_message create_error_message(uint8_t error_code, uint8_t unit_id);
     //void parse_slave_message(slave_message sm);
     //clot_slave(base_unit **device_pointer_, uint16_t devices_number_,
     //SoftwareSerial * s, uint16_t sspin, bool debug = false);
+
     clot_slave(base_unit **units_pointer_, uint16_t units_number_, HardwareSerial * s_,
     bool debug = false);
+
     void do_main_loop();
     uint8_t slave_address;
 
-    protected:
+    //protected:
     //bool D_RS485_DEBUG_OUTPUT_ALLOWED; // debug flag
     base_unit **_units_pointer; // pointer to array of pointers to devices 
     uint16_t _units_number; // number of devices
