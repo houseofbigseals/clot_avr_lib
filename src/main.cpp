@@ -15,11 +15,12 @@ const uint8_t device_len = 6;
 base_unit* devarr[device_len] = {&relay_ch1, &relay_ch2, &relay_ch3, &relay_ch4,
 &relay_ch5, &relay_ch6};
 
-clot_slave main_slave = clot_slave(devarr, device_len, &Serial);
+clot_slave main_slave = clot_slave(0x01, devarr, device_len, &Serial);
 
 void setup() 
 {	
 	Serial.begin(9600);
+	Serial.println("hah");
 }
 
 void loop() 

@@ -32,7 +32,7 @@ class clot_slave
     //clot_slave(base_unit **device_pointer_, uint16_t devices_number_,
     //SoftwareSerial * s, uint16_t sspin, bool debug = false);
 
-    clot_slave(base_unit **units_pointer_, uint16_t units_number_, HardwareSerial * s_,
+    clot_slave(uint8_t slave_addr, base_unit **units_pointer_, uint16_t units_number_, HardwareSerial * s_,
     bool debug = false);
 
     void do_main_loop();

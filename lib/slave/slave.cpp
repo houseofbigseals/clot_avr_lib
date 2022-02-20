@@ -3,9 +3,10 @@
 #include "slave.h"
 
 
-clot_slave::clot_slave(base_unit **units_pointer_, uint16_t units_number_, 
+clot_slave::clot_slave(uint8_t slave_addr, base_unit **units_pointer_, uint16_t units_number_, 
 HardwareSerial * s_, bool debug = false)
 {
+    this->slave_address = slave_addr;
     this->_units_pointer = units_pointer_;
     this->_units_number = units_number_;
     this->_s= s_;
@@ -32,6 +33,7 @@ void clot_slave::do_main_loop()
             delayMicroseconds(5);
         }
         // then lets parse it
+        _s->println("hahahaha");
         parse_package(message, len);
     }
     // if we got message or not we have to do routine for all devices
