@@ -1,4 +1,7 @@
 #include <Arduino.h>
+#include "test_relay_protocol.h"
+
+/*
 #include "slave.h"
 #include "clot_protocol.h"
 #include "relay_unit.h"
@@ -20,10 +23,21 @@ clot_slave main_slave = clot_slave(0x01, devarr, device_len, &Serial);
 void setup() 
 {	
 	Serial.begin(9600);
-	Serial.println("hah");
+	//Serial.println("hah");
 }
 
 void loop() 
 {
 	main_slave.do_main_loop();
+}
+*/
+
+void setup()
+{
+	setup1();
+}
+
+void loop()
+{
+	loop1();
 }

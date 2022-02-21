@@ -23,7 +23,7 @@ class clot_slave
     // then it takes back results and creates slave message from unit and sends it to master
 
     public:
-    void parse_package(uint8_t * package, uint16_t len);
+    void parse_package(uint8_t * package, uint8_t len);
     //void send_master_message(master_message mm);
     void send_slave_message(slave_message sm_);
     slave_message parse_master_message(master_message mm);

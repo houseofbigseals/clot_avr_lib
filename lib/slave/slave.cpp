@@ -23,7 +23,7 @@ void clot_slave::do_main_loop()
     if(_s->available())
     {
         // if we have any lets get them
-        uint8_t message[7]; // we dont want read more than 7 characters //TODO fix
+        uint8_t message[11]; // we dont want read more than 7 characters //TODO fix
         uint16_t len = 0;
         delay(1);  // strategical delay - awaiting until all bytes will be sent
         while(_s->available())
@@ -33,7 +33,7 @@ void clot_slave::do_main_loop()
             delayMicroseconds(5);
         }
         // then lets parse it
-        _s->println("hahahaha");
+        //_s->println("hahahaha");
         parse_package(message, len);
     }
     // if we got message or not we have to do routine for all devices
@@ -88,13 +88,21 @@ void clot_slave::send_slave_message(slave_message sm_)
 }
 
 
-void clot_slave::parse_package(uint8_t * package, uint16_t len)
+void clot_slave::parse_package(uint8_t * package, uint8_t len)
 {
+    _s->println("we got: \n");
+    for(uint8_t i =0; i<len; i++)
+    {
+        _s->print(package[i]);
+    }
+    _s->println("\nour reaction: ");
     // at first lets check if it for us
     if(package[1] != this->slave_address)
     {
         //this message is not for us
         // do nothing
+        _s->println("not my msg");
+
         return;
     }
     else
@@ -105,6 +113,7 @@ void clot_slave::parse_package(uint8_t * package, uint16_t len)
             // its incorrect but for us
             slave_message error_message = create_error_message(clot_incorrect_command,
             package[2]);
+            _s->println("wrong len");
             send_slave_message(error_message);
             return;
         }
@@ -117,6 +126,7 @@ void clot_slave::parse_package(uint8_t * package, uint16_t len)
                 // its incorrect
                 slave_message error_message = create_error_message(clot_incorrect_command,
                 package[2]);
+                _s->println("wrong start byte");
                 send_slave_message(error_message);
                 return;
             }
@@ -133,11 +143,13 @@ void clot_slave::parse_package(uint8_t * package, uint16_t len)
                     // its incorrect
                     slave_message error_message = create_error_message(
                         clot_incorrect_command, package[2]);
+                    _s->println("wrong crc");
                     send_slave_message(error_message);
                     return;
                 }
                 else
                 {
+                    _s->println("good msg");
                     // check if it is for one of our devices
                     for (uint16_t d = 0; d < _units_number; d++)
                     {
