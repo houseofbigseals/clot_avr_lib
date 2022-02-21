@@ -37,7 +37,7 @@ String parse_command(String com)
 {
     if (com[1] != slave_addr)
     {
-        return not_my_work;
+        return not_my_work;  // remove it in future
     }
     else
     {
