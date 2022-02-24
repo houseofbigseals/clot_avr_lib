@@ -1,5 +1,6 @@
 #include <Arduino.h>
-#include "test_relay_protocol.h"
+//#include "test_relay_protocol.h"
+#include "cond_sensor.h"
 
 /*
 #include "slave.h"

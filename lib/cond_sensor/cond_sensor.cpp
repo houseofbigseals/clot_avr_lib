@@ -2,7 +2,7 @@
 #include "cond_sensor.h"
 
 
-#define F_CPU 8000000UL
+//#define F_CPU 8000000UL
 #define MAX_ITER 1
 #define DELAY_TIME 150
 #define TW_START 0x08
@@ -18,32 +18,96 @@
 #define TW_MT_DATA_NACK 0x30
 #define DEV_ADDR 0x4C // Address of Slave-Device
 
+char slave_addr = '2';
+char start_byte = 'a';
+char end_byte = 'g';
 
-void setup()
+uint8_t signal_led_pin = 7;
+
+uint8_t get_data_command = 1;
+String error_string = "error";
+String not_my_work = "wrong_slave_addr";
+String job_done = "job_done";
+
+void setup1()
 {
     Serial.begin(9600);
+	pinMode(signal_led_pin, OUTPUT);
+	digitalWrite(signal_led_pin, HIGH);
     _delay_ms(5000);  
     TWIInit();
     _delay_ms(1000);
+	digitalWrite(signal_led_pin, LOW);
     //TODO
 }
 
-void loop()
+
+void loop1()
 {
-    //TODO
-    //wait for user command, then measure and send data back 
-    /*
-    read_val = i2c_read_bytes(DEV_ADDR);
-    adc_val = (float)read_val*5/1023;
-    
-    if( (read_val&0x8000) == 0)
-        Serial.print(adc_val);
-    else
-        Serial.print(0.0);  
-    Serial.println ();  
-  */
+    while(true)
+    {
+        if (Serial.available() > 0)
+        {
+            String s = Serial.readStringUntil('\n');
+			digitalWrite(signal_led_pin, HIGH);
+            /*
+            This is very simple example 
+            We are awaiting string like: "agbcd\n" where:
+            'a' is a start byte, forever
+            'g' is addr for slave device 
+            'd' is end byte forever
+            'b' is a command
+            and 'c' is nothing for that node
+            
 
+            so for example a130d\n is command for slave 1
+            to make command 3 
+
+            answer:
+            there is two answers - echo and reaction
+            echo is simply received command
+            reaction is 
+			String with value of conductivity
+			or error code
+            */
+
+            Serial.println(s);
+            String answer = parse_command(s);
+            Serial.println(answer);
+			digitalWrite(signal_led_pin, LOW);
+        }
+    }
 }
+
+String parse_command(String com)
+{
+    if (com[1] != slave_addr)
+    {
+        return not_my_work;  // remove it in future
+    }
+    else
+    {
+        int command = (int)com[2] - 48; // stupid converting char digit to int
+		if (command == get_data_command)
+		{
+			uint16_t read_val = i2c_read_bytes(DEV_ADDR);
+    		float adc_val = (float)read_val*5/1023;
+    
+    		if( (read_val&0x8000) == 0) // mb it means to filter too high values ?
+        		return(String(adc_val, 3));  
+    		else
+        		return(String("freaking error"));
+		}
+		else
+        	return(error_string);
+        //int ch_state = (int)com[3] - 48;
+        //digitalWrite(pins[ch_num -1], ch_state);
+        //digitalWrite(leds[ch_num -1], !ch_state);
+        //return job_done;
+    }
+}
+
+
 
 void sendState() 
 {

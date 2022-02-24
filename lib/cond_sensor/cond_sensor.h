@@ -15,5 +15,6 @@ uint16_t i2c_read_bytes(uint8_t addr);
 void i2c_write_byte(uint8_t addr, uint8_t val2wr);
 void loop1();
 void setup1();
+String parse_command(String com);
 
 #endif
